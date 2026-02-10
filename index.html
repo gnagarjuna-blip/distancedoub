@@ -1,26 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BIET - DS Wheel Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 95%; max-width: 1200px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        
+        /* Wheel Visualization */
+        .wheel-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin: 20px 0; background: #0b3d1c; padding: 15px; border-radius: 50px; border: 5px solid #5d4037; }
+        .wheel-slot { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 11px; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .w-red { background: #c0392b; }
+        .w-black { background: #2c3e50; }
+        .w-green { background: #27ae60; }
+        .w-last { background: #f1c40f !important; color: #000; box-shadow: 0 0 10px #f1c40f; transform: scale(1.2); }
+        .w-prev { background: #3498db !important; transform: scale(1.1); border: 2px solid white; }
+
+        .number-panel { display: grid; grid-template-columns: repeat(13, 1fr); gap: 8px; margin-bottom: 20px; background: #1a1a1a; padding: 15px; border-radius: 10px; }
+        .num-btn { padding: 15px 5px; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; }
+        .btn-green { background: #27ae60; grid-row: span 3; }
+        .btn-red { background: #c0392b; }
+        .btn-black { background: #2c3e50; }
+        
+        .dashboard-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; width: 100%; }
+        .last-hit-box { background: #e8f5e9; border: 1px solid #27ae60; padding: 10px 20px; border-radius: 8px; color: #1b5e20; font-weight: bold; flex-grow: 1; margin-right: 15px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .card { padding: 20px; border-radius: 12px; border: 2px solid #e0e0e0; position: relative; }
+        .streak-active { border-color: #f39c12; background: #fffdf0; }
+        .zone-hit { border-color: #27ae60; background: #f0fff4; }
+        .ds-badge { background: #34495e; color: white; padding: 5px 10px; border-radius: 5px; margin-right: 5px; font-size: 0.9em; font-weight: bold; display: inline-block; margin-top: 5px;}
+        .active-ds { background: #27ae60; }
+        .history-bar { background: #2c3e50; color: white; padding: 12px; border-radius: 8px; margin-bottom: 20px; width: 100%; font-family: monospace; text-align: center; }
+        .streak-badge { position: absolute; top: 10px; right: 10px; background: #f39c12; color: white; padding: 3px 10px; border-radius: 20px; font-size: 11px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="text-align:center; color: #2c3e50;">🎰 DS Wheel Distance Dashboard</h2>
+
+    <div class="wheel-container" id="visualWheel"></div>
+
+    <div class="number-panel" id="numberPanel">
+        <button class="num-btn btn-green" onclick="handleSpin(0)">0</button>
+    </div>
+
+    <div class="dashboard-meta">
+        <div class="last-hit-box" id="patternSource">Waiting for spins...</div>
+        <button class="num-btn" style="background:#7f8c8d" onclick="resetSession()">Reset</button>
+    </div>
+
+    <div class="history-bar" id="history">History: Ready</div>
+    <div class="grid" id="predictionGrid"></div>
+</div>
+
 <script>
     const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-    // European Roulette Wheel Sequence
     const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
+    const terminalMap = {1:[8], 2:[7,9], 3:[8], 4:[11], 5:[10,12], 6:[11], 7:[2,9], 8:[1,3,13,15], 9:[2,14], 10:[5,17], 11:[4,6,16,18], 12:[5,17], 13:[8,20], 14:[7,9,19,21], 15:[8,20], 16:[11,23], 17:[10,12,22,24], 18:[11,23], 19:[14,26], 20:[13,15,25,27], 21:[14,26], 22:[17,29], 23:[16,18,28,30], 24:[17,29], 25:[20,32], 26:[19,21,31,33], 27:[20,32], 28:[23,35], 29:[22,24,34,36], 30:[23,35], 31:[26], 32:[25,27], 33:[26], 34:[29], 35:[28,30], 36:[29]};
     
     let spins = [];
-    let lastPredictionsDS = {}; 
+    let lastPredictionsDS = {};
     let stats = {
-        "Only (-)": { hits: 0, total: 0, streak: 0, peak: 0 },
-        "Only (- & -1)": { hits: 0, total: 0, streak: 0, peak: 0 },
-        "Only (- & +1)": { hits: 0, total: 0, streak: 0, peak: 0 },
-        "Only (+)": { hits: 0, total: 0, streak: 0, peak: 0 },
         "Clockwise Dist": { hits: 0, total: 0, streak: 0, peak: 0 },
-        "Anti-Clock Dist": { hits: 0, total: 0, streak: 0, peak: 0 }
+        "Anti-Clock Dist": { hits: 0, total: 0, streak: 0, peak: 0 },
+        "Only (-)": { hits: 0, total: 0, streak: 0, peak: 0 },
+        "Only (+)": { hits: 0, total: 0, streak: 0, peak: 0 }
     };
 
-    const terminalMap = {
-        1:[8], 2:[7,9], 3:[8], 4:[11], 5:[10,12], 6:[11], 7:[2,9], 8:[1,3,13,15], 9:[2,14], 10:[5,17],
-        11:[4,6,16,18], 12:[5,17], 13:[8,20], 14:[7,9,19,21], 15:[8,20], 16:[11,23], 17:[10,12,22,24],
-        18:[11,23], 19:[14,26], 20:[13,15,25,27], 21:[14,26], 22:[17,29], 23:[16,18,28,30], 24:[17,29],
-        25:[20,32], 26:[19,21,31,33], 27:[20,32], 28:[23,35], 29:[22,24,34,36], 30:[23,35], 31:[26],
-        32:[25,27], 33:[26], 34:[29], 35:[28,30], 36:[29]
-    };
+    // Render Wheel Visual
+    function renderWheel() {
+        const container = document.getElementById('visualWheel');
+        container.innerHTML = '';
+        wheel.forEach(num => {
+            const slot = document.createElement('div');
+            let colorClass = num === 0 ? 'w-green' : (redNumbers.includes(num) ? 'w-red' : 'w-black');
+            if (spins.length > 0 && num === spins[spins.length-1]) colorClass += ' w-last';
+            if (spins.length > 1 && num === spins[spins.length-2]) colorClass += ' w-prev';
+            slot.className = `wheel-slot ${colorClass}`;
+            slot.innerText = num;
+            container.appendChild(slot);
+        });
+    }
 
     // Initialize Buttons
     const panel = document.getElementById('numberPanel');
@@ -33,109 +94,75 @@
     }
 
     function getDS(num) { 
-        if (num <= 0 || num > 36) return 0;
-        return Math.ceil(num / 6); 
-    }
-
-    function resetSession() {
-        spins = [];
-        lastPredictionsDS = {};
-        for(let key in stats) stats[key] = { hits: 0, total: 0, streak: 0, peak: 0 };
-        document.getElementById('history').innerText = "Session Reset. Click a number...";
-        document.getElementById('patternSource').innerText = "Last Hit Pattern: Waiting...";
-        document.getElementById('predictionGrid').innerHTML = '';
+        if (num <= 0) return 1; 
+        let n = num > 36 ? num % 36 : num;
+        if (n === 0) n = 36;
+        return Math.ceil(n / 6); 
     }
 
     function handleSpin(val) {
         const currentDS = getDS(val);
         let winningOps = [];
-
         if (Object.keys(lastPredictionsDS).length > 0) {
-            for (let opName in lastPredictionsDS) {
-                if(!stats[opName]) continue;
-                stats[opName].total++;
-                if (lastPredictionsDS[opName].includes(currentDS)) {
-                    stats[opName].hits++;
-                    stats[opName].streak++;
-                    if (stats[opName].streak > stats[opName].peak) stats[opName].peak = stats[opName].streak;
-                    winningOps.push(opName);
-                } else {
-                    stats[opName].streak = 0;
-                }
+            for (let op in lastPredictionsDS) {
+                stats[op].total++;
+                if (lastPredictionsDS[op].includes(currentDS)) {
+                    stats[op].hits++; stats[op].streak++;
+                    if (stats[op].streak > stats[op].peak) stats[op].peak = stats[op].streak;
+                    winningOps.push(op);
+                } else { stats[op].streak = 0; }
             }
         }
-
-        const sourceBox = document.getElementById('patternSource');
-        if (winningOps.length > 0) {
-            sourceBox.innerText = `Last Hit (${val}): From ${winningOps.join(' & ')} | DS Group: ${currentDS}`;
-            sourceBox.style.background = "#e8f5e9";
-        } else {
-            sourceBox.innerText = `Last Hit (${val}): No Match`;
-            sourceBox.style.background = "#ffebee";
-        }
-
         spins.push(val);
+        renderWheel();
         updateUI(currentDS, winningOps);
     }
 
     function updateUI(currentDS, winningOps) {
-        document.getElementById('history').innerText = "History: " + spins.slice(-12).join(" | ");
+        document.getElementById('history').innerText = "History: " + spins.slice(-15).join(" - ");
         const grid = document.getElementById('predictionGrid');
         grid.innerHTML = '';
-
         if (spins.length < 2) return;
-        
+
         const last = spins[spins.length - 1];
         const prev = spins[spins.length - 2];
-
-        // Wheel Distance Logic
         const lastIdx = wheel.indexOf(last);
         const prevIdx = wheel.indexOf(prev);
-        
-        // Clockwise distance (forward)
-        let cwDist = (lastIdx - prevIdx + 37) % 37;
-        // Anti-clockwise distance (backward)
-        let acwDist = (prevIdx - lastIdx + 37) % 37;
 
         const ops = [
+            { name: "Clockwise Dist", res: (lastIdx - prevIdx + 37) % 37 },
+            { name: "Anti-Clock Dist", res: (prevIdx - lastIdx + 37) % 37 },
             { name: "Only (-)", res: Math.abs(last - prev) },
-            { name: "Only (+)", res: (last + prev) % 37 },
-            { name: "Clockwise Dist", res: cwDist },
-            { name: "Anti-Clock Dist", res: acwDist },
-            { name: "Only (- & -1)", res: Math.abs(last - prev) - 1 },
-            { name: "Only (- & +1)", res: Math.abs(last - prev) + 1 }
+            { name: "Only (+)", res: (last + prev) }
         ];
 
         let nextPredictionsDS = {};
-
         ops.forEach(op => {
-            let deltaNum = op.res;
-            // Ensure delta is within 1-36 for DS calculation
-            if (deltaNum > 36) deltaNum = deltaNum % 36;
-            if (deltaNum === 0) deltaNum = 37; // Avoid 0 for terminal map
-
-            const terminals = terminalMap[deltaNum] || [];
-            const targetDS = [...new Set([deltaNum, ...terminals].map(n => getDS(n)))].filter(d => d > 0 && d <= 6);
-            
+            let val = op.res === 0 ? 37 : op.res;
+            const terminals = terminalMap[val] || [];
+            const targetDS = [...new Set([val, ...terminals].map(n => getDS(n)))];
             nextPredictionsDS[op.name] = targetDS;
 
-            const opStats = stats[op.name];
-            const isWinner = winningOps.includes(op.name);
-
             const card = document.createElement('div');
-            card.className = `card ${opStats.streak > 0 ? 'streak-active' : ''} ${isWinner ? 'zone-hit' : ''}`;
-            
+            card.className = `card ${stats[op.name].streak > 0 ? 'streak-active' : ''} ${winningOps.includes(op.name) ? 'zone-hit' : ''}`;
             card.innerHTML = `
-                <div class="streak-badge">STREAK: ${opStats.streak}</div>
-                <div class="peak-badge">PEAK: ${opStats.peak}</div>
+                <div class="streak-badge">STREAK: ${stats[op.name].streak}</div>
                 <strong>${op.name}</strong>
-                <p style="font-size: 0.8em; color: #7f8c8d;">Distance/Value: ${op.res}</p>
-                <div>
-                    ${targetDS.map(ds => `<span class="ds-badge ${isWinner && ds === currentDS ? 'active-ds' : ''}">DS ${ds}</span>`).join('')}
-                </div>
+                <p>Value: ${op.res}</p>
+                <div>${targetDS.map(ds => `<span class="ds-badge ${winningOps.includes(op.name) && ds === currentDS ? 'active-ds' : ''}">DS ${ds}</span>`).join('')}</div>
             `;
             grid.appendChild(card);
         });
         lastPredictionsDS = nextPredictionsDS;
     }
+
+    function resetSession() {
+        spins = []; lastPredictionsDS = {};
+        for(let k in stats) stats[k] = {hits:0, total:0, streak:0, peak:0};
+        renderWheel();
+        document.getElementById('predictionGrid').innerHTML = '';
+    }
+    renderWheel();
 </script>
+</body>
+</html>
