@@ -3,37 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIET - Professional DS Pro</title>
+    <title>BIET - Cumulative DS Tracker</title>
     <style>
-        :root { --bg: #f4f7f6; --dark: #1a1a1a; --accent: #3498db; --win: #2ecc71; --loss: #e74c3c; --txt: #2c3e50; }
+        :root { --bg: #f0f2f5; --dark: #121212; --accent: #3498db; --win: #27ae60; --loss: #e74c3c; --txt: #2c3e50; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 950px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         
-        /* Dashboard Stats */
+        /* Stats Dashboard */
         .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: var(--dark); color: white; padding: 10px; border-radius: 8px; text-align: center; }
-        .stat-val { font-size: 18px; font-weight: bold; display: block; }
+        .stat-card { background: var(--dark); color: white; padding: 12px; border-radius: 10px; text-align: center; border-bottom: 4px solid var(--accent); }
+        .stat-val { font-size: 20px; font-weight: bold; display: block; margin-top: 5px; }
         .profit { color: var(--win); }
         .drawdown { color: var(--loss); }
 
-        .wheel-strip { display: flex; overflow-x: auto; gap: 4px; padding: 10px; background: var(--dark); border-radius: 8px; margin-bottom: 15px; border-bottom: 3px solid var(--accent); }
-        .slot { min-width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 11px; font-weight: bold; color: white; }
+        /* Wheel Strip */
+        .wheel-strip { display: flex; overflow-x: auto; gap: 4px; padding: 10px; background: var(--dark); border-radius: 8px; margin-bottom: 15px; border: 1px solid #333; }
+        .slot { min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: bold; color: white; }
         .r { background: #e74c3c; } .b { background: #2c3e50; } .g { background: #27ae60; }
-        .last-hit { border: 3px solid #f1c40f; box-shadow: 0 0 10px #f1c40f; }
+        .last-hit { border: 3px solid #f1c40f; box-shadow: 0 0 12px #f1c40f; transform: scale(1.1); }
 
-        /* Inputs */
-        .num-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 5px; margin-bottom: 20px; }
-        .n-btn { padding: 12px 0; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; }
-        
-        /* Predictions */
+        /* Input Grid */
+        .num-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 6px; margin-bottom: 20px; }
+        .n-btn { padding: 15px 0; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .n-btn:active { transform: scale(0.9); }
+
+        /* Prediction Cards */
         .pred-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .card { padding: 15px; border-radius: 10px; border: 2px solid #ddd; text-align: center; }
-        .active-win { border-color: var(--win); background: #fafffa; }
+        .card { padding: 20px; border-radius: 12px; border: 2px solid #ddd; background: #fff; text-align: center; }
+        .active-win { border-color: var(--win); background: #f0fff4; }
         .ds-row { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
-        .ds-badge { background: var(--txt); color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; }
-        .hit { background: var(--win); border: 2px solid white; }
+        .ds-badge { background: var(--txt); color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; border: 2px solid transparent; }
+        .hit-badge { background: var(--win); border-color: gold; box-shadow: 0 0 10px rgba(39, 174, 96, 0.4); }
 
-        .reset-btn { width: 100%; padding: 10px; margin-top: 15px; background: #95a5a6; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .reset-btn { width: 100%; padding: 12px; margin-top: 20px; background: #7f8c8d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px; }
+        .reset-btn:hover { background: var(--txt); }
     </style>
 </head>
 <body>
@@ -41,9 +44,9 @@
 <div class="container">
     <div class="stats-bar">
         <div class="stat-card">Bankroll<span id="stat-profit" class="stat-val">0</span></div>
-        <div class="stat-card">Stake<span id="stat-stake" class="stat-val">1x</span></div>
-        <div class="stat-card">Win Streak<span id="stat-wstreak" class="stat-val profit">0</span></div>
-        <div class="stat-card">Loss Streak<span id="stat-lstreak" class="stat-val drawdown">0</span></div>
+        <div class="stat-card">Stake / DS<span id="stat-stake" class="stat-val">1x</span></div>
+        <div class="stat-card">W-Streak<span id="stat-wstreak" class="stat-val profit">0</span></div>
+        <div class="stat-card">L-Streak<span id="stat-lstreak" class="stat-val drawdown">0</span></div>
     </div>
 
     <div class="wheel-strip" id="wheelStrip"></div>
@@ -64,11 +67,11 @@
     let spins = [];
     let lastPreds = { cw: [], acw: [] };
     let bankroll = 0;
-    let unit = 1;
+    let currentStake = 1;
     let winStreak = 0;
     let lossStreak = 0;
 
-    // Generate Buttons
+    // Build Number Buttons
     const bg = document.getElementById('btns');
     for(let i=1; i<=36; i++) {
         const b = document.createElement('button');
@@ -82,46 +85,50 @@
 
     function resetSession() {
         spins = []; lastPreds = { cw: [], acw: [] };
-        bankroll = 0; unit = 1; winStreak = 0; lossStreak = 0;
+        bankroll = 0; currentStake = 1; winStreak = 0; lossStreak = 0;
         document.getElementById('output').innerHTML = '';
-        updateUI(false, false, null);
+        updateUI(null);
     }
 
     function press(val) {
         const curDS = getDS(val);
-        let win = false;
+        
+        // Calculate bets from previous predictions
+        const allBets = [...new Set([...lastPreds.cw, ...lastPreds.acw])];
+        const totalUnitsBet = allBets.length * currentStake;
 
-        if (lastPreds.cw.length > 0) {
-            // Check if current DS was in either prediction
-            if (lastPreds.cw.includes(curDS) || lastPreds.acw.includes(curDS)) {
-                win = true;
-                // Double Street win pays 6:1. We bet 2 units (one for CW, one for ACW)
-                bankroll += (unit * 6) - (unit * 2); 
+        if (allBets.length > 0) {
+            // Subtract the total bet amount FIRST
+            bankroll -= totalUnitsBet;
+
+            if (allBets.includes(curDS)) {
+                // WIN Logic
+                bankroll += (currentStake * 6); // Add the 6x payout
                 winStreak++;
                 lossStreak = 0;
-                unit = Math.max(1, unit - 1); // Decrease unit on win
+                currentStake = Math.max(1, currentStake - 1); // Decrease unit
             } else {
-                win = false;
-                bankroll -= (unit * 2); // Loss of 2 units bet
+                // LOSS Logic
                 lossStreak++;
                 winStreak = 0;
-                unit++; // Increase unit on loss (x + 1)
+                currentStake++; // Increase unit
             }
         }
 
         spins.push(val);
-        updateUI(win, win, curDS);
+        updateUI(curDS);
     }
 
-    function updateUI(winCW, winACW, curDS) {
-        // Update Stats
-        document.getElementById('stat-profit').innerText = bankroll;
-        document.getElementById('stat-profit').className = 'stat-val ' + (bankroll >= 0 ? 'profit' : 'drawdown');
-        document.getElementById('stat-stake').innerText = unit + 'x';
+    function updateUI(curDS) {
+        // Stats update
+        const profitEl = document.getElementById('stat-profit');
+        profitEl.innerText = bankroll;
+        profitEl.className = 'stat-val ' + (bankroll >= 0 ? 'profit' : 'drawdown');
+        document.getElementById('stat-stake').innerText = currentStake + 'x';
         document.getElementById('stat-wstreak').innerText = winStreak;
         document.getElementById('stat-lstreak').innerText = lossStreak;
 
-        // Update Wheel
+        // Wheel update
         const strip = document.getElementById('wheelStrip');
         strip.innerHTML = '';
         wheel.forEach(n => {
@@ -131,40 +138,45 @@
             strip.appendChild(s);
         });
 
+        // Prediction Logic
         const out = document.getElementById('output');
         out.innerHTML = '';
         if (spins.length < 2) return;
 
-        // Logic
         const lastIdx = wheel.indexOf(spins[spins.length-1]);
         const prevIdx = wheel.indexOf(spins[spins.length-2]);
         const jumpCW = (lastIdx - prevIdx + 37) % 37;
         const jumpACW = (prevIdx - lastIdx + 37) % 37;
 
-        const tCW = [wheel[(lastIdx + jumpCW) % 37], wheel[(lastIdx + jumpCW + 1) % 37]];
-        const tACW = [wheel[(lastIdx - jumpACW + 37) % 37], wheel[(lastIdx - jumpACW - 1 + 37) % 37]];
+        // Target + Next Neighbor
+        const dsCW = [...new Set([
+            getDS(wheel[(lastIdx + jumpCW) % 37]), 
+            getDS(wheel[(lastIdx + jumpCW + 1) % 37])
+        ])];
+        const dsACW = [...new Set([
+            getDS(wheel[(lastIdx - jumpACW + 37) % 37]), 
+            getDS(wheel[(lastIdx - jumpACW - 1 + 37) % 37])
+        ])];
 
-        const dsCW = [...new Set(tCW.map(n => getDS(n)))];
-        const dsACW = [...new Set(tACW.map(n => getDS(n)))];
+        lastPreds = { cw: dsCW, acw: dsACW };
 
         const results = [
-            { name: "Clockwise Shift", ds: dsCW, hit: dsCW.includes(curDS) },
-            { name: "Anti-Clock Shift", ds: dsACW, hit: dsACW.includes(curDS) }
+            { name: "Clockwise Shift", ds: dsCW },
+            { name: "Anti-Clock Shift", ds: dsACW }
         ];
 
         results.forEach(r => {
+            const hit = r.ds.includes(curDS);
             const card = document.createElement('div');
-            card.className = `card ${r.hit ? 'active-win' : ''}`;
+            card.className = `card ${hit ? 'active-win' : ''}`;
             card.innerHTML = `
-                <div style="font-weight:bold">${r.name}</div>
+                <div style="font-weight:bold; color:var(--txt); margin-bottom:10px">${r.name}</div>
                 <div class="ds-row">
-                    ${r.ds.map(d => `<div class="ds-badge ${r.hit && d === curDS ? 'hit' : ''}">DS ${d}</div>`).join('')}
+                    ${r.ds.map(d => `<div class="ds-badge ${hit && d === curDS ? 'hit-badge' : ''}">DS ${d}</div>`).join('')}
                 </div>
             `;
             out.appendChild(card);
         });
-
-        lastPreds = { cw: dsCW, acw: dsACW };
     }
 </script>
 </body>
