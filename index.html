@@ -3,162 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIET - DS Wheel Dashboard</title>
+    <title>BIET - DS Wheel Shift Dashboard</title>
     <style>
-        :root { --bg: #f0f2f5; --card: #ffffff; --primary: #2c3e50; --win: #27ae60; --loss: #c0392b; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 1100px; background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        :root { --bg: #f4f7f6; --card: #ffffff; --primary: #2c3e50; --accent: #16a085; --win: #27ae60; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 1000px; background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
         
-        /* Wheel Strip */
-        .wheel-strip { display: flex; overflow-x: auto; gap: 4px; padding: 15px; background: #0b3d1c; border-radius: 8px; margin-bottom: 20px; border: 3px solid #5d4037; }
-        .slot { min-width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: bold; color: white; border: 1px solid rgba(255,255,255,0.1); }
-        .red { background: #e74c3c; }
-        .black { background: #2c3e50; }
-        .green { background: #27ae60; }
-        .last-hit { background: #f1c40f !important; color: black; transform: scale(1.2); box-shadow: 0 0 10px #f1c40f; }
-        .prev-hit { background: #3498db !important; transform: scale(1.1); border: 2px solid white; }
-
-        /* Input Panel */
-        .num-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 5px; margin-bottom: 20px; }
-        .btn { padding: 12px 2px; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.2s; }
-        .btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
-
-        /* Cards */
-        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
-        .card { padding: 15px; border-radius: 10px; border: 2px solid #ddd; position: relative; transition: 0.3s; }
-        .hit-zone { border-color: var(--win); background: #f0fff4; }
-        .ds-tag { display: inline-block; background: #34495e; color: white; padding: 4px 8px; border-radius: 4px; margin: 2px; font-size: 12px; font-weight: bold; }
-        .active-ds { background: var(--win); transform: scale(1.1); }
+        /* Wheel UI */
+        .wheel-display { display: flex; overflow-x: auto; gap: 5px; padding: 15px; background: #1a1a1a; border-radius: 10px; margin-bottom: 20px; border-bottom: 4px solid var(--accent); }
+        .slot { min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; font-weight: bold; color: white; }
+        .r { background: #e74c3c; } .b { background: #2c3e50; } .g { background: #27ae60; }
+        .is-last { border: 3px solid #f1c40f; transform: scale(1.2); z-index: 10; }
+        .is-target { border: 3px solid #3498db; animation: pulse 1.5s infinite; }
         
-        .history { background: #2c3e50; color: #fff; padding: 10px; border-radius: 5px; text-align: center; margin-bottom: 15px; font-family: monospace; }
-        @media (max-width: 600px) { .num-grid { grid-template-columns: repeat(6, 1fr); } .btn-zero { grid-column: span 6; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Controls */
+        .num-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 6px; margin-bottom: 20px; }
+        .n-btn { padding: 12px 0; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .n-btn:active { transform: scale(0.9); }
+
+        /* Prediction Cards */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .card { padding: 20px; border-radius: 12px; border: 2px solid #eee; background: white; transition: 0.3s; }
+        .winner { border-color: var(--win); background: #f0fff4; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.2); }
+        .ds-row { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .ds-box { background: #34495e; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 14px; }
+        .ds-active { background: var(--win); border: 2px solid #fff; box-shadow: 0 0 5px var(--win); }
+        
+        .history { font-family: monospace; background: #2c3e50; color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align: center; margin-top: 0;">🎰 DS Wheel Distance Logic</h2>
+    <h2 style="text-align: center; color: var(--primary);">🎯 Wheel Distance Mapper</h2>
 
-    <div class="wheel-strip" id="wheelStrip"></div>
+    <div class="wheel-display" id="wheelStrip"></div>
 
-    <div class="num-grid" id="numGrid">
-        <button class="btn green btn-zero" onclick="press(0)">0</button>
+    <div class="num-grid" id="inputGrid">
+        <button class="n-btn g" style="grid-row: span 3;" onclick="input(0)">0</button>
     </div>
 
-    <div class="history" id="historyText">Waiting for data...</div>
+    <div class="history" id="hist">History: Waiting for 2 spins...</div>
 
-    <div class="results-grid" id="output"></div>
-
-    <div style="text-align: center; margin-top: 20px;">
-        <button onclick="location.reload()" style="padding: 10px 20px; cursor: pointer;">Reset Dashboard</button>
-    </div>
+    <div class="grid" id="output"></div>
 </div>
 
 <script>
     const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
-    const redNums = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+    const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
     let spins = [];
-    let lastPreds = {};
+    let activePreds = {};
 
-    // Build Buttons
-    const grid = document.getElementById('numGrid');
+    // Generate Buttons
+    const ig = document.getElementById('inputGrid');
     for(let i=1; i<=36; i++) {
         const b = document.createElement('button');
-        b.className = `btn ${redNums.includes(i) ? 'red' : 'black'}`;
+        b.className = `n-btn ${reds.includes(i) ? 'r' : 'b'}`;
         b.innerText = i;
-        b.onclick = () => press(i);
-        grid.appendChild(b);
+        b.onclick = () => input(i);
+        ig.appendChild(b);
     }
 
-    function getDS(n) {
-        if (n <= 0) return 1;
-        let val = n > 36 ? n % 36 : n;
-        if (val === 0) val = 36;
-        return Math.ceil(val / 6);
-    }
+    function getDS(n) { return Math.ceil(n / 6); }
 
-    function renderWheel() {
+    function drawWheel(targets = []) {
         const strip = document.getElementById('wheelStrip');
         strip.innerHTML = '';
-        wheel.forEach(n => {
-            const d = document.createElement('div');
-            let c = n === 0 ? 'green' : (redNums.includes(n) ? 'red' : 'black');
-            if(spins.length > 0 && n === spins[spins.length-1]) c += ' last-hit';
-            if(spins.length > 1 && n === spins[spins.length-2]) c += ' prev-hit';
-            d.className = `slot ${c}`;
-            d.innerText = n;
-            strip.appendChild(d);
+        wheel.forEach((n, idx) => {
+            const s = document.createElement('div');
+            let c = n === 0 ? 'g' : (reds.includes(n) ? 'r' : 'b');
+            if(spins.length > 0 && n === spins[spins.length-1]) c += ' is-last';
+            if(targets.includes(n)) c += ' is-target';
+            s.className = `slot ${c}`;
+            s.innerText = n;
+            strip.appendChild(s);
         });
     }
 
-    function press(val) {
-        const currentDS = getDS(val);
-        let winners = [];
+    function input(val) {
+        const curDS = val === 0 ? 0 : getDS(val);
+        let winKeys = [];
         
-        // Check previous predictions
-        if(Object.keys(lastPreds).length > 0) {
-            for(let key in lastPreds) {
-                if(lastPreds[key].includes(currentDS)) winners.push(key);
-            }
+        // Check hits from last round
+        for(let k in activePreds) {
+            if(activePreds[k].includes(curDS)) winKeys.push(k);
         }
 
         spins.push(val);
-        renderWheel();
-        updateLogic(currentDS, winners);
+        process(curDS, winKeys);
     }
 
-    function updateLogic(currDS, winners) {
-        document.getElementById('historyText').innerText = "History: " + spins.slice(-10).join(" > ");
+    function process(curDS, winKeys) {
+        document.getElementById('hist').innerText = "History: " + spins.slice(-12).join(" | ");
         const out = document.getElementById('output');
         out.innerHTML = '';
-
-        if(spins.length < 2) return;
+        
+        if(spins.length < 2) { drawWheel(); return; }
 
         const last = spins[spins.length-1];
         const prev = spins[spins.length-2];
-        const lastPos = wheel.indexOf(last);
-        const prevPos = wheel.indexOf(prev);
+        const lastIdx = wheel.indexOf(last);
+        const prevIdx = wheel.indexOf(prev);
 
-        // Your requested distances
-        const cw = (lastPos - prevPos + 37) % 37;
-        const acw = (prevPos - lastPos + 37) % 37;
+        // 1. Calculate the raw distance (jump)
+        const distCW = (lastIdx - prevIdx + 37) % 37;
+        const distACW = (prevIdx - lastIdx + 37) % 37;
 
-        const modes = [
-            { name: "Clockwise Dist", val: cw },
-            { name: "Anti-Clock Dist", val: acw },
-            { name: "Distance (-)", val: Math.abs(last - prev) },
-            { name: "Sum (+)", val: (last + prev) % 37 }
+        // 2. Map distances to the wheel starting FROM THE LAST RESULT
+        // Clockwise Target: Last index + CW distance
+        const targetIdxCW = (lastIdx + distCW) % 37;
+        const targetNumCW = wheel[targetIdxCW];
+        
+        // Anti-Clockwise Target: Last index - ACW distance
+        const targetIdxACW = (lastIdx - distACW + 37) % 37;
+        const targetNumACW = wheel[targetIdxACW];
+
+        drawWheel([targetNumCW, targetNumACW]);
+
+        const configs = [
+            { name: "Clockwise Shift", dist: distCW, target: targetNumCW },
+            { name: "Anti-Clock Shift", dist: distACW, target: targetNumACW }
         ];
 
-        let nextPreds = {};
+        let newPreds = {};
 
-        modes.forEach(m => {
-            // Logic: Result distance gives the DS. 
-            // We also calculate Terminal/Neighbor DS for coverage
-            let baseDS = getDS(m.val);
-            let neighbors = [baseDS - 1, baseDS, baseDS + 1].filter(d => d >= 1 && d <= 6);
-            let uniqueDS = [...new Set(neighbors)];
+        configs.forEach(conf => {
+            const baseDS = conf.target === 0 ? 1 : getDS(conf.target);
+            // Neighbor DS logic (e.g., if target is 33, DS is 6, we give 5 & 6)
+            let prediction = [...new Set([baseDS, (baseDS % 6) + 1])].sort();
             
-            nextPreds[m.name] = uniqueDS;
+            newPreds[conf.name] = prediction;
+            const isWin = winKeys.includes(conf.name);
 
             const card = document.createElement('div');
-            const isWin = winners.includes(m.name);
-            card.className = `card ${isWin ? 'hit-zone' : ''}`;
+            card.className = `card ${isWin ? 'winner' : ''}`;
             card.innerHTML = `
-                <strong style="color:var(--primary)">${m.name}</strong>
-                <p style="margin: 5px 0; font-size: 13px;">Result: ${m.val}</p>
-                <div>
-                    ${uniqueDS.map(ds => `<span class="ds-tag ${isWin && ds === currDS ? 'active-ds' : ''}">DS ${ds}</span>`).join('')}
+                <div style="font-weight:bold; color:var(--primary)">${conf.name}</div>
+                <div style="font-size:12px; color:#666; margin:5px 0;">
+                    Jump: ${conf.dist} slots ➔ Lands on: <b>${conf.target}</b>
+                </div>
+                <div class="ds-row">
+                    ${prediction.map(ds => `
+                        <div class="ds-box ${isWin && ds === curDS ? 'ds-active' : ''}">DS ${ds}</div>
+                    `).join('')}
                 </div>
             `;
             out.appendChild(card);
         });
 
-        lastPreds = nextPreds;
+        activePreds = newPreds;
     }
 
-    renderWheel();
+    drawWheel();
 </script>
-
 </body>
 </html>
