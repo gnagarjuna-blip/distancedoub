@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIET - 10% Profit Master</title>
+    <title>BIET - Custom Profit Master</title>
     <style>
         :root { --bg: #f0f2f5; --dark: #121212; --accent: #3498db; --win: #27ae60; --loss: #e74c3c; --txt: #2c3e50; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 950px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         
         /* Configuration Inputs */
-        .config-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #ecf0f1; padding: 15px; border-radius: 10px; }
+        .config-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; background: #ecf0f1; padding: 15px; border-radius: 10px; }
         .config-group { display: flex; flex-direction: column; }
         .config-group label { font-size: 12px; font-weight: bold; margin-bottom: 5px; color: var(--txt); }
         .config-group input { padding: 8px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 16px; font-weight: bold; }
@@ -40,16 +40,20 @@
 <body>
 
 <div class="container">
-    <h2 style="text-align: center; margin-top: 0;">🎰 10% Profit Target DS</h2>
+    <h2 style="text-align: center; margin-top: 0;">🎰 Custom Profit Target DS</h2>
 
     <div class="config-bar">
         <div class="config-group">
-            <label>Starting Bankroll</label>
+            <label>Bankroll</label>
             <input type="number" id="start-bank" value="1000" onchange="initSession()">
         </div>
         <div class="config-group">
-            <label>Base Unit Size</label>
+            <label>Base Unit</label>
             <input type="number" id="base-unit" value="10" onchange="initSession()">
+        </div>
+        <div class="config-group">
+            <label>Target %</label>
+            <input type="number" id="target-perc" value="10" onchange="initSession()">
         </div>
     </div>
 
@@ -57,7 +61,7 @@
         <div class="stat-card">Current Bankroll<span id="stat-curr-bank" class="stat-val">1000</span></div>
         <div class="stat-card">Session P/L<span id="stat-profit" class="stat-val">0</span></div>
         <div class="stat-card">Current Stake<span id="stat-stake" class="stat-val">10</span></div>
-        <div class="stat-card">Target (10%)<span id="stat-target" class="stat-val profit">+100</span></div>
+        <div class="stat-card">Goal<span id="stat-target" class="stat-val profit">+100</span></div>
     </div>
 
     <div class="wheel-strip" id="wheelStrip"></div>
@@ -81,11 +85,13 @@
     let startBankroll = 0;
     let baseUnit = 0;
     let multiplier = 1;
+    let targetPercent = 10;
 
     function initSession() {
         startBankroll = parseFloat(document.getElementById('start-bank').value);
         currentBankroll = startBankroll;
         baseUnit = parseFloat(document.getElementById('base-unit').value);
+        targetPercent = parseFloat(document.getElementById('target-perc').value);
         multiplier = 1;
         spins = [];
         lastPreds = { cw: [], acw: [] };
@@ -101,7 +107,11 @@
         bg.appendChild(b);
     }
 
-    function getDS(n) { return n === 0 ? 1 : Math.ceil(n / 6); }
+    // 0 is now treated as "No DS" (returns -1) so it never matches a prediction
+    function getDS(n) { 
+        if (n === 0) return -1; 
+        return Math.ceil(n / 6); 
+    }
 
     function press(val) {
         const curDS = getDS(val);
@@ -112,12 +122,13 @@
             // Deduct total bet
             currentBankroll -= (uniqueBets.length * stakePerDS);
 
+            // If val is 0, curDS is -1, which will never be in uniqueBets (1-6)
             if (uniqueBets.includes(curDS)) {
                 // WIN
                 currentBankroll += (stakePerDS * 6);
                 multiplier = Math.max(1, multiplier - 1);
             } else {
-                // LOSS
+                // LOSS (Happens if wrong DS OR if 0 is hit)
                 multiplier++;
             }
         }
@@ -125,21 +136,24 @@
         spins.push(val);
         updateUI(curDS);
 
-        // Check 10% Profit Target
+        // Check Dynamic Profit Target
         const profit = currentBankroll - startBankroll;
-        if (profit >= (startBankroll * 0.10)) {
-            alert("🎯 10% Profit Target Reached! Session Auto-Resetting...");
+        const targetAmount = startBankroll * (targetPercent / 100);
+        if (profit >= targetAmount) {
+            alert(`🎯 Target of ${targetPercent}% reached! Resetting...`);
             initSession();
         }
     }
 
     function updateUI(curDS) {
         const profit = currentBankroll - startBankroll;
+        const targetVal = startBankroll * (targetPercent / 100);
+        
         document.getElementById('stat-curr-bank').innerText = currentBankroll.toFixed(2);
         document.getElementById('stat-profit').innerText = profit.toFixed(2);
         document.getElementById('stat-profit').className = 'stat-val ' + (profit >= 0 ? 'profit' : 'drawdown');
         document.getElementById('stat-stake').innerText = (baseUnit * multiplier) + " (" + multiplier + "x)";
-        document.getElementById('stat-target').innerText = "+" + (startBankroll * 0.10).toFixed(2);
+        document.getElementById('stat-target').innerText = "+" + targetVal.toFixed(2);
 
         const strip = document.getElementById('wheelStrip');
         strip.innerHTML = '';
@@ -159,8 +173,9 @@
         const jumpCW = (lastIdx - prevIdx + 37) % 37;
         const jumpACW = (prevIdx - lastIdx + 37) % 37;
 
-        const dsCW = [...new Set([getDS(wheel[(lastIdx + jumpCW) % 37]), getDS(wheel[(lastIdx + jumpCW + 1) % 37])])];
-        const dsACW = [...new Set([getDS(wheel[(lastIdx - jumpACW + 37) % 37]), getDS(wheel[(lastIdx - jumpACW - 1 + 37) % 37])])];
+        // Predictions ignore 0 as a betting option
+        const dsCW = [...new Set([getDS(wheel[(lastIdx + jumpCW) % 37]), getDS(wheel[(lastIdx + jumpCW + 1) % 37])])].filter(d => d !== -1);
+        const dsACW = [...new Set([getDS(wheel[(lastIdx - jumpACW + 37) % 37]), getDS(wheel[(lastIdx - jumpACW - 1 + 37) % 37])])].filter(d => d !== -1);
 
         lastPreds = { cw: dsCW, acw: dsACW };
 
