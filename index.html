@@ -3,193 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIET - Custom Profit Master</title>
+    <title>BIET - Multi-Bet Predictor</title>
     <style>
-        :root { --bg: #f0f2f5; --dark: #121212; --accent: #3498db; --win: #27ae60; --loss: #e74c3c; --txt: #2c3e50; }
+        :root { --bg: #f8f9fa; --dark: #212529; --accent: #20c997; --gold: #ffc107; --danger: #dc3545; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 950px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .container { width: 100%; max-width: 1000px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         
-        /* Configuration Inputs */
-        .config-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; background: #ecf0f1; padding: 15px; border-radius: 10px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; background: #e9ecef; padding: 15px; border-radius: 8px; }
         .config-group { display: flex; flex-direction: column; }
-        .config-group label { font-size: 12px; font-weight: bold; margin-bottom: 5px; color: var(--txt); }
-        .config-group input { padding: 8px; border: 1px solid #bdc3c7; border-radius: 5px; font-size: 16px; font-weight: bold; }
+        .config-group label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #495057; }
+        .config-group select, .config-group input { padding: 6px; border-radius: 4px; border: 1px solid #ced4da; font-weight: bold; }
 
-        /* Stats Dashboard */
-        .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: var(--dark); color: white; padding: 12px; border-radius: 10px; text-align: center; border-bottom: 4px solid var(--accent); }
-        .stat-val { font-size: 18px; font-weight: bold; display: block; margin-top: 5px; }
-        .profit { color: var(--win); }
-        .drawdown { color: var(--loss); }
+        #trigger-banner { width: 100%; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px; font-weight: bold; display: none; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
 
-        .wheel-strip { display: flex; overflow-x: auto; gap: 4px; padding: 10px; background: var(--dark); border-radius: 8px; margin-bottom: 15px; }
-        .slot { min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: bold; color: white; }
-        .r { background: #e74c3c; } .b { background: #2c3e50; } .g { background: #27ae60; }
-        .last-hit { border: 3px solid #f1c40f; box-shadow: 0 0 12px #f1c40f; }
+        .stats-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 15px; }
+        .stat-card { background: var(--dark); color: white; padding: 10px; border-radius: 6px; text-align: center; border-bottom: 3px solid var(--accent); }
+        .stat-val { font-size: 16px; font-weight: bold; display: block; color: var(--accent); }
 
-        .num-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 6px; margin-bottom: 20px; }
-        .n-btn { padding: 15px 0; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .wheel-strip { display: flex; overflow-x: auto; gap: 4px; padding: 10px; background: #343a40; border-radius: 8px; margin-bottom: 15px; }
+        .slot { min-width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 11px; font-weight: bold; color: white; }
+        .r { background: #e63946; } .b { background: #1d3557; } .g { background: #2a9d8f; }
+        .last-hit { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+        .num-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; margin-bottom: 20px; }
+        .n-btn { padding: 12px 0; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; opacity: 0.9; }
+        .n-btn:hover { opacity: 1; transform: scale(1.05); }
         
-        .pred-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .card { padding: 15px; border-radius: 12px; border: 2px solid #ddd; background: #fff; text-align: center; }
-        .active-win { border-color: var(--win); background: #f0fff4; }
-        .ds-badge { display: inline-block; background: var(--txt); color: white; padding: 8px 15px; border-radius: 8px; font-weight: bold; margin-top: 10px; }
-        .hit-badge { background: var(--win); border: 2px solid gold; }
+        .main-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .card { padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; background: #fff; }
+        .bet-badge { display: inline-block; padding: 5px 10px; background: #f1f3f5; border: 1px solid #ced4da; border-radius: 4px; margin: 3px; font-size: 12px; font-weight: bold; }
+        .bet-active { background: var(--accent); color: white; border-color: var(--accent); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2 style="text-align: center; margin-top: 0;">🎰 Custom Profit Target DS</h2>
+    <div id="trigger-banner">⚠️ CONCISE DISTANCE REPEATED - BETTING OPPORTUNITY</div>
 
-    <div class="config-bar">
+    <div class="config-grid">
         <div class="config-group">
-            <label>Bankroll</label>
-            <input type="number" id="start-bank" value="1000" onchange="initSession()">
+            <label>Strategy Type</label>
+            <select id="strategy-type" onchange="updateUI()">
+                <option value="ds">Double Streets (Max 3)</option>
+                <option value="st">Streets (Max 5)</option>
+                <option value="cn">Corners (Max 4)</option>
+                <option value="dz">Dozens (1-2)</option>
+                <option value="cl">Columns (1-2)</option>
+            </select>
+        </div>
+        <div class="config-group"><label>Base Unit</label><input type="number" id="base-unit" value="1"></div>
+        <div class="config-group">
+            <label>Incr on Loss</label>
+            <select id="loss-trigger"></select>
         </div>
         <div class="config-group">
-            <label>Base Unit</label>
-            <input type="number" id="base-unit" value="10" onchange="initSession()">
-        </div>
-        <div class="config-group">
-            <label>Target %</label>
-            <input type="number" id="target-perc" value="10" onchange="initSession()">
+            <label>Decr on Win</label>
+            <select id="win-recovery"></select>
         </div>
     </div>
 
     <div class="stats-bar">
-        <div class="stat-card">Current Bankroll<span id="stat-curr-bank" class="stat-val">1000</span></div>
-        <div class="stat-card">Session P/L<span id="stat-profit" class="stat-val">0</span></div>
-        <div class="stat-card">Current Stake<span id="stat-stake" class="stat-val">10</span></div>
-        <div class="stat-card">Goal<span id="stat-target" class="stat-val profit">+100</span></div>
+        <div class="stat-card">Profit<span id="stat-profit" class="stat-val">0</span></div>
+        <div class="stat-card">Unit<span id="stat-mult" class="stat-val">1</span></div>
+        <div class="stat-card">Last Dist<span id="stat-dist" class="stat-val">-</span></div>
+        <div class="stat-card">Losses<span id="stat-losses" class="stat-val">0</span></div>
+        <div class="stat-card">Bankroll<span id="stat-bank" class="stat-val">1000</span></div>
     </div>
 
     <div class="wheel-strip" id="wheelStrip"></div>
+    <div class="num-grid" id="btns"><button class="n-btn g" style="grid-row: span 3;" onclick="press(0)">0</button></div>
 
-    <div class="num-grid" id="btns">
-        <button class="n-btn g" style="grid-row: span 3;" onclick="press(0)">0</button>
+    <div class="main-layout">
+        <div class="card">
+            <h4 style="margin:0 0 10px 0">Targeted Bets</h4>
+            <div id="bet-display">Enter results to see prediction...</div>
+        </div>
+        <div class="card">
+            <h4 style="margin:0 0 10px 0">Distance Memory</h4>
+            <div id="dist-memory" style="font-size: 12px; color: #6c757d;"></div>
+        </div>
     </div>
-
-    <div class="pred-grid" id="output"></div>
     
-    <button onclick="initSession()" style="width:100%; padding:12px; margin-top:20px; background:#7f8c8d; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">MANUAL RESET</button>
+    <button onclick="resetAll()" style="width:100%; padding:10px; margin-top:15px; background:#adb5bd; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">RESET SESSION</button>
 </div>
 
 <script>
     const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-    
-    let spins = [];
-    let lastPreds = { cw: [], acw: [] };
-    let currentBankroll = 0;
-    let startBankroll = 0;
-    let baseUnit = 0;
-    let multiplier = 1;
-    let targetPercent = 10;
+    let spins = [], distanceMap = {}, currentBets = [], bankroll = 1000, mult = 1, streak = 0;
 
-    function initSession() {
-        startBankroll = parseFloat(document.getElementById('start-bank').value);
-        currentBankroll = startBankroll;
-        baseUnit = parseFloat(document.getElementById('base-unit').value);
-        targetPercent = parseFloat(document.getElementById('target-perc').value);
-        multiplier = 1;
-        spins = [];
-        lastPreds = { cw: [], acw: [] };
-        updateUI(null);
-    }
-
-    const bg = document.getElementById('btns');
+    // Build Table Numbers
+    const btnContainer = document.getElementById('btns');
     for(let i=1; i<=36; i++) {
         const b = document.createElement('button');
         b.className = `n-btn ${reds.includes(i) ? 'r' : 'b'}`;
-        b.innerText = i;
-        b.onclick = () => press(i);
-        bg.appendChild(b);
+        b.innerText = i; b.onclick = () => press(i);
+        btnContainer.appendChild(b);
     }
 
-    // 0 is now treated as "No DS" (returns -1) so it never matches a prediction
-    function getDS(n) { 
-        if (n === 0) return -1; 
-        return Math.ceil(n / 6); 
-    }
+    // Populate Logic Dropdowns
+    const lt = document.getElementById('loss-trigger');
+    for(let i=1; i<=36; i++) lt.add(new Option(i + " Loss", i));
+    lt.value = 3;
 
-    function press(val) {
-        const curDS = getDS(val);
-        const uniqueBets = [...new Set([...lastPreds.cw, ...lastPreds.acw])];
-        const stakePerDS = baseUnit * multiplier;
+    const wr = document.getElementById('win-recovery');
+    for(let i=1; i<=5; i++) wr.add(new Option(i + " Unit", i));
 
-        if (uniqueBets.length > 0) {
-            // Deduct total bet
-            currentBankroll -= (uniqueBets.length * stakePerDS);
+    function press(num) {
+        let unit = parseFloat(document.getElementById('base-unit').value);
+        let lThresh = parseInt(document.getElementById('loss-trigger').value);
+        let wDecr = parseInt(document.getElementById('win-recovery').value);
 
-            // If val is 0, curDS is -1, which will never be in uniqueBets (1-6)
-            if (uniqueBets.includes(curDS)) {
-                // WIN
-                currentBankroll += (stakePerDS * 6);
-                multiplier = Math.max(1, multiplier - 1);
+        if (currentBets.length > 0) {
+            bankroll -= (currentBets.length * unit * mult);
+            if (currentBets.includes(num)) {
+                bankroll += (unit * mult * (36 / currentBets.length)); // Rough payout estimation
+                mult = Math.max(1, mult - wDecr);
+                streak = 0;
             } else {
-                // LOSS (Happens if wrong DS OR if 0 is hit)
-                multiplier++;
+                streak++;
+                if (streak % lThresh === 0) mult++;
             }
         }
-
-        spins.push(val);
-        updateUI(curDS);
-
-        // Check Dynamic Profit Target
-        const profit = currentBankroll - startBankroll;
-        const targetAmount = startBankroll * (targetPercent / 100);
-        if (profit >= targetAmount) {
-            alert(`🎯 Target of ${targetPercent}% reached! Resetting...`);
-            initSession();
-        }
+        spins.push(num);
+        updateUI();
     }
 
-    function updateUI(curDS) {
-        const profit = currentBankroll - startBankroll;
-        const targetVal = startBankroll * (targetPercent / 100);
-        
-        document.getElementById('stat-curr-bank').innerText = currentBankroll.toFixed(2);
-        document.getElementById('stat-profit').innerText = profit.toFixed(2);
-        document.getElementById('stat-profit').className = 'stat-val ' + (profit >= 0 ? 'profit' : 'drawdown');
-        document.getElementById('stat-stake').innerText = (baseUnit * multiplier) + " (" + multiplier + "x)";
-        document.getElementById('stat-target').innerText = "+" + targetVal.toFixed(2);
+    function updateUI() {
+        document.getElementById('stat-profit').innerText = (bankroll - 1000).toFixed(1);
+        document.getElementById('stat-mult').innerText = mult;
+        document.getElementById('stat-losses').innerText = streak;
+        document.getElementById('stat-bank').innerText = bankroll.toFixed(0);
 
+        // Wheel UI
         const strip = document.getElementById('wheelStrip');
         strip.innerHTML = '';
         wheel.forEach(n => {
             const s = document.createElement('div');
             s.className = `slot ${n===0?'g':(reds.includes(n)?'r':'b')} ${n===spins[spins.length-1]?'last-hit':''}`;
-            s.innerText = n;
-            strip.appendChild(s);
+            s.innerText = n; strip.appendChild(s);
         });
 
-        const out = document.getElementById('output');
-        out.innerHTML = '';
         if (spins.length < 2) return;
 
-        const lastIdx = wheel.indexOf(spins[spins.length-1]);
-        const prevIdx = wheel.indexOf(spins[spins.length-2]);
-        const jumpCW = (lastIdx - prevIdx + 37) % 37;
-        const jumpACW = (prevIdx - lastIdx + 37) % 37;
+        const last = spins[spins.length-1];
+        const prev = spins[spins.length-2];
+        const dist = (wheel.indexOf(last) - wheel.indexOf(prev) + 37) % 37;
+        document.getElementById('stat-dist').innerText = dist;
 
-        // Predictions ignore 0 as a betting option
-        const dsCW = [...new Set([getDS(wheel[(lastIdx + jumpCW) % 37]), getDS(wheel[(lastIdx + jumpCW + 1) % 37])])].filter(d => d !== -1);
-        const dsACW = [...new Set([getDS(wheel[(lastIdx - jumpACW + 37) % 37]), getDS(wheel[(lastIdx - jumpACW - 1 + 37) % 37])])].filter(d => d !== -1);
+        distanceMap[dist] = (distanceMap[dist] || 0) + 1;
+        
+        // Trigger
+        const banner = document.getElementById('trigger-banner');
+        banner.style.display = (distanceMap[dist] > 1) ? 'block' : 'none';
 
-        lastPreds = { cw: dsCW, acw: dsACW };
+        calculateBets(last, dist);
+    }
 
-        [{n:"Clockwise", d:dsCW}, {n:"Anti-Clockwise", d:dsACW}].forEach(r => {
-            const isHit = r.d.includes(curDS);
-            const card = document.createElement('div');
-            card.className = `card ${isHit ? 'active-win' : ''}`;
-            card.innerHTML = `<strong>${r.n} Shift</strong><br>` + 
-                r.d.map(d => `<div class="ds-badge ${isHit && d === curDS ? 'hit-badge' : ''}">DS ${d}</div>`).join(' ');
-            out.appendChild(card);
+    function calculateBets(pivotNum, distance) {
+        const type = document.getElementById('strategy-type').value;
+        const target = wheel[(wheel.indexOf(pivotNum) + distance) % 37];
+        let bets = [];
+
+        if (target === 0) { currentBets = [0,1,2,3]; updateDisplay(["Zero Area (0,1,2,3)"]); return; }
+
+        switch(type) {
+            case 'ds': // Double Streets (6 numbers)
+                const dsStart = Math.floor((target-1)/6)*6 + 1;
+                bets = getRange(dsStart, 6);
+                // Neighbors logic: pick previous and next DS
+                if(dsStart > 6) bets.push(...getRange(dsStart-6, 6));
+                if(dsStart < 31) bets.push(...getRange(dsStart+6, 6));
+                updateDisplay(["Double Street " + dsStart, "Neighbors"]);
+                break;
+            case 'st': // Streets (3 numbers)
+                const sStart = Math.floor((target-1)/3)*3 + 1;
+                bets = getRange(sStart, 3);
+                for(let i=1; i<=2; i++) {
+                    if(sStart > 3*i) bets.push(...getRange(sStart-(3*i), 3));
+                    if(sStart < 37-(3*i)) bets.push(...getRange(sStart+(3*i), 3));
+                }
+                updateDisplay(["Street " + sStart + " & Neighbors"]);
+                break;
+            case 'cn': // Corners (4 numbers)
+                const cIdx = target <= 2 ? 1 : (target >= 35 ? 33 : target - 1);
+                bets = [cIdx, cIdx+1, cIdx+3, cIdx+4];
+                updateDisplay(["Corner Box around " + target]);
+                break;
+            case 'dz': // Dozens
+                const dz = Math.ceil(target/12);
+                bets = getRange((dz-1)*12 + 1, 12);
+                updateDisplay(["Dozen " + dz]);
+                break;
+            case 'cl': // Columns
+                const col = (target % 3 === 0) ? 3 : target % 3;
+                for(let i=0; i<12; i++) bets.push(col + (i*3));
+                updateDisplay(["Column " + col]);
+                break;
+        }
+
+        currentBets = [...new Set(bets)].filter(n => n >= 0 && n <= 36);
+    }
+
+    function getRange(start, count) {
+        let r = [];
+        for(let i=0; i<count; i++) if(start+i <= 36) r.push(start+i);
+        return r;
+    }
+
+    function updateDisplay(names) {
+        const disp = document.getElementById('bet-display');
+        disp.innerHTML = `<strong>Coverage:</strong> ${names.join(', ')} <br><br>`;
+        currentBets.forEach(n => {
+            disp.innerHTML += `<span class="bet-badge bet-active">${n}</span>`;
         });
     }
 
-    initSession();
+    function resetAll() {
+        spins = []; distanceMap = {}; currentBets = []; bankroll = 1000; mult = 1; streak = 0;
+        updateUI();
+    }
 </script>
 </body>
 </html>
