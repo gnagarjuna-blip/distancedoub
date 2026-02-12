@@ -3,42 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIET - Wheel-to-Table Mapping</title>
+    <title>BIET - Group Betting DS Master</title>
     <style>
-        :root { --bg: #f1f2f6; --dark: #2f3542; --accent: #1e90ff; --win: #2ed573; --loss: #ff4757; --gold: #ffa502; }
+        :root { --bg: #f4f6f9; --dark: #2d3436; --accent: #0984e3; --win: #00b894; --loss: #d63031; --gold: #fdcb6e; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 1000px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .container { width: 100%; max-width: 950px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
         
-        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 15px; background: #dfe4ea; padding: 15px; border-radius: 10px; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; background: #dfe6e9; padding: 15px; border-radius: 8px; }
         .config-group { display: flex; flex-direction: column; }
-        .config-group label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #57606f; }
-        .config-group select, .config-group input { padding: 8px; border-radius: 5px; border: 1px solid #ced4da; font-weight: bold; }
+        .config-group label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #636e72; }
+        .config-group select, .config-group input { padding: 8px; border-radius: 4px; border: 1px solid #b2bec3; font-weight: bold; }
 
-        #trigger-banner { width: 100%; padding: 12px; border-radius: 8px; text-align: center; margin-bottom: 15px; font-weight: bold; display: none; background: var(--win); color: white; border: 2px solid #fff; }
+        #trigger-banner { width: 100%; padding: 12px; border-radius: 6px; text-align: center; margin-bottom: 15px; font-weight: bold; display: none; background: var(--win); color: white; border: 2px solid #fff; }
 
         .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
-        .stat-card { background: var(--dark); color: white; padding: 12px; border-radius: 8px; text-align: center; }
-        .stat-val { font-size: 18px; font-weight: bold; display: block; color: var(--accent); }
+        .stat-card { background: var(--dark); color: white; padding: 10px; border-radius: 6px; text-align: center; }
+        .stat-val { font-size: 16px; font-weight: bold; display: block; color: var(--gold); }
 
-        .wheel-strip { display: flex; overflow-x: auto; gap: 4px; padding: 10px; background: #2f3542; border-radius: 8px; margin-bottom: 15px; }
-        .slot { min-width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: bold; color: white; }
-        .r { background: #ff4757; } .b { background: #2f3542; border: 1px solid #57606f; } .g { background: #2ed573; }
-        .last-hit { border: 3px solid var(--gold); box-shadow: 0 0 10px var(--gold); }
+        .wheel-strip { display: flex; overflow-x: auto; gap: 4px; padding: 10px; background: #2d3436; border-radius: 8px; margin-bottom: 15px; }
+        .slot { min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 11px; font-weight: bold; color: white; }
+        .r { background: #d63031; } .b { background: #2d3436; border: 1px solid #636e72; } .g { background: #00b894; }
+        .last-hit { outline: 3px solid var(--gold); outline-offset: 1px; }
 
-        .num-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 5px; margin-bottom: 20px; }
-        .n-btn { padding: 15px 0; border: none; border-radius: 5px; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .num-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 4px; margin-bottom: 20px; }
+        .n-btn { padding: 12px 0; border: none; border-radius: 4px; color: white; font-weight: bold; cursor: pointer; }
         
-        .main-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
-        .card { padding: 15px; border-radius: 10px; border: 1px solid #ced4da; background: #fff; }
-        .bet-tag { display: inline-block; padding: 6px 12px; background: #f1f2f6; border: 2px solid #dfe4ea; border-radius: 6px; margin: 4px; font-weight: bold; font-size: 13px; }
-        .bet-active { border-color: var(--accent); color: var(--accent); }
-        .num-badge { display: inline-block; width: 25px; height: 25px; line-height: 25px; background: #2f3542; color: white; border-radius: 50%; font-size: 10px; margin: 2px; text-align: center; }
+        .main-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 15px; }
+        .card { padding: 15px; border-radius: 8px; border: 1px solid #dfe6e9; background: #fff; }
+        .bet-unit-badge { display: inline-block; padding: 8px 15px; background: #f9f9f9; border: 2px solid var(--accent); border-radius: 6px; margin: 5px; font-weight: bold; color: var(--dark); }
+        .active-bet { background: #e1f5fe; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="trigger-banner">🎯 DISTANCE REPEATED: PATTERN RESTART</div>
+    <div id="trigger-banner">🔄 CONCISE DISTANCE REPEATED: PATTERN RESTART</div>
 
     <div class="config-grid">
         <div class="config-group">
@@ -47,24 +46,24 @@
                 <option value="ds">Double Streets (Max 3)</option>
                 <option value="st">Streets (Max 5)</option>
                 <option value="cn">Corners (Max 4)</option>
-                <option value="dz">Dozens (1-2)</option>
+                <option value="dz">Dozens (Max 2)</option>
             </select>
         </div>
-        <div class="config-group"><label>Base Unit</label><input type="number" id="base-unit" value="1"></div>
+        <div class="config-group"><label>Unit Price</label><input type="number" id="base-unit" value="10"></div>
         <div class="config-group">
-            <label>Incr after X Loss</label>
+            <label>Incr. After Loss</label>
             <select id="loss-trigger"></select>
         </div>
         <div class="config-group">
-            <label>Decr after Win</label>
+            <label>Decr. After Win</label>
             <select id="win-recovery"></select>
         </div>
     </div>
 
     <div class="stats-bar">
-        <div class="stat-card">Profit<span id="stat-profit" class="stat-val">0</span></div>
-        <div class="stat-card">Unit Level<span id="stat-mult" class="stat-val">1</span></div>
-        <div class="stat-card">Distance<span id="stat-dist" class="stat-val">-</span></div>
+        <div class="stat-card">Profit/Loss<span id="stat-profit" class="stat-val">0</span></div>
+        <div class="stat-card">Multiplier<span id="stat-mult" class="stat-val">1x</span></div>
+        <div class="stat-card">Total Bet<span id="stat-total-bet" class="stat-val">0</span></div>
         <div class="stat-card">Streak<span id="stat-streak" class="stat-val">0</span></div>
     </div>
 
@@ -73,24 +72,24 @@
 
     <div class="main-layout">
         <div class="card">
-            <h3 style="margin:0 0 10px 0; color: var(--dark);">Predicted Table Bets</h3>
-            <div id="bet-display">Awaiting data...</div>
+            <h4 style="margin:0 0 10px 0;">Next Play (Group Betting)</h4>
+            <div id="bet-display">Input numbers to generate prediction...</div>
         </div>
         <div class="card">
-            <h3 style="margin:0 0 10px 0; color: var(--dark);">Frequency</h3>
-            <div id="dist-history" style="font-size: 12px; line-height: 1.6;"></div>
+            <h4 style="margin:0 0 10px 0;">Distance Freq</h4>
+            <div id="dist-history" style="font-size: 11px;"></div>
         </div>
     </div>
     
-    <button onclick="resetSession()" style="width:100%; padding:12px; margin-top:15px; background:#747d8c; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">RESET ALL</button>
+    <button onclick="resetSession()" style="width:100%; padding:10px; margin-top:15px; background:#b2bec3; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">RESET SESSION</button>
 </div>
 
 <script>
     const wheel = [0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26];
     const reds = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
-    let spins = [], distanceMap = {}, currentBets = [], bankroll = 1000, mult = 1, streak = 0;
+    let spins = [], distanceMap = {}, currentGroups = [], currentNumbers = [], bankroll = 0, mult = 1, streak = 0;
 
-    // UI Init
+    // Create Number Buttons
     const bg = document.getElementById('btns');
     for(let i=1; i<=36; i++){
         const b = document.createElement('button');
@@ -100,7 +99,7 @@
     }
 
     const lt = document.getElementById('loss-trigger');
-    for(let i=1; i<=36; i++) lt.add(new Option(i, i));
+    for(let i=1; i<=36; i++) lt.add(new Option(i + " Loss", i));
     lt.value = 2;
 
     const wr = document.getElementById('win-recovery');
@@ -110,14 +109,20 @@
         let unit = parseFloat(document.getElementById('base-unit').value);
         let lT = parseInt(document.getElementById('loss-trigger').value);
         let wR = parseInt(document.getElementById('win-recovery').value);
+        let style = document.getElementById('bet-style').value;
 
-        if (currentBets.length > 0) {
-            bankroll -= (currentBets.length * unit * mult);
-            if (currentBets.includes(n)) {
-                bankroll += (unit * mult * 36); 
+        if (currentGroups.length > 0) {
+            let betTotal = currentGroups.length * unit * mult;
+            bankroll -= betTotal;
+            
+            if (currentNumbers.includes(n)) {
+                // WIN - Payout based on style
+                let factor = (style === 'ds') ? 6 : (style === 'st' ? 12 : (style === 'cn' ? 9 : 3));
+                bankroll += (unit * mult * factor);
                 mult = Math.max(1, mult - wR);
                 streak = 0;
             } else {
+                // LOSS
                 streak++;
                 if (streak % lT === 0) mult++;
             }
@@ -127,8 +132,8 @@
     }
 
     function updateUI() {
-        document.getElementById('stat-profit').innerText = (bankroll - 1000).toFixed(0);
-        document.getElementById('stat-mult').innerText = mult;
+        document.getElementById('stat-profit').innerText = bankroll.toFixed(0);
+        document.getElementById('stat-mult').innerText = mult + "x";
         document.getElementById('stat-streak').innerText = streak;
 
         const strip = document.getElementById('wheelStrip');
@@ -144,14 +149,11 @@
         const last = spins[spins.length-1];
         const prev = spins[spins.length-2];
         const dist = (wheel.indexOf(last) - wheel.indexOf(prev) + 37) % 37;
-        document.getElementById('stat-dist').innerText = dist;
         distanceMap[dist] = (distanceMap[dist] || 0) + 1;
 
         document.getElementById('trigger-banner').style.display = (distanceMap[dist] > 1) ? 'block' : 'none';
-        
-        // Show distance history
         document.getElementById('dist-history').innerHTML = Object.entries(distanceMap)
-            .sort((a,b) => b[1]-a[1]).map(([d,c]) => `<b>Dist ${d}:</b> ${c}x`).join(' | ');
+            .sort((a,b) => b[1]-a[1]).map(([d,c]) => `<b>D${d}:</b> ${c}x`).join(' | ');
 
         processBets(last, dist);
     }
@@ -159,55 +161,60 @@
     function processBets(lastNum, dist) {
         const style = document.getElementById('bet-style').value;
         const targetIdx = (wheel.indexOf(lastNum) + dist) % 37;
-        
-        // Find Wheel Neighbors (Target + 1 Left + 1 Right = 3 core numbers)
-        const wheelTargets = [
-            wheel[(targetIdx - 1 + 37) % 37],
-            wheel[targetIdx],
-            wheel[(targetIdx + 1) % 37]
-        ];
+        const wheelTargets = [wheel[(targetIdx - 1 + 37) % 37], wheel[targetIdx], wheel[(targetIdx + 1) % 37]];
 
-        let tableGroups = new Set();
-        let numbersToBet = new Set();
+        let groups = new Set();
+        let nums = new Set();
 
         wheelTargets.forEach(num => {
-            if (num === 0) { [0,1,2,3].forEach(z => numbersToBet.add(z)); return; }
+            if (num === 0) { groups.add("Zero Area"); [0,1,2,3].forEach(z=>nums.add(z)); return; }
             
             if (style === 'ds') {
                 const ds = Math.floor((num-1)/6);
-                tableGroups.add(`DS ${ds*6+1}-${ds*6+6}`);
-                for(let i=ds*6+1; i<=ds*6+6; i++) numbersToBet.add(i);
+                groups.add(`DS ${ds*6+1}-${ds*6+6}`);
+                for(let i=ds*6+1; i<=ds*6+6; i++) nums.add(i);
             } else if (style === 'st') {
                 const st = Math.floor((num-1)/3);
-                tableGroups.add(`ST ${st*3+1}-${st*3+3}`);
-                for(let i=st*3+1; i<=st*3+3; i++) numbersToBet.add(i);
+                groups.add(`ST ${st*3+1}-${st*3+3}`);
+                for(let i=st*3+1; i<=st*3+3; i++) nums.add(i);
             } else if (style === 'cn') {
                 const corner = num <= 2 ? 1 : (num >= 35 ? 32 : num);
-                tableGroups.add(`Corner ${corner}`);
-                [corner, corner+1, corner+3, corner+4].forEach(c => { if(c<=36) numbersToBet.add(c)});
+                groups.add(`Corner ${corner}`);
+                [corner, corner+1, corner+3, corner+4].forEach(c => { if(c<=36) nums.add(c)});
             } else if (style === 'dz') {
                 const dz = Math.ceil(num/12);
-                tableGroups.add(`Dozen ${dz}`);
-                for(let i=(dz-1)*12+1; i<=dz*12; i++) numbersToBet.add(i);
+                groups.add(`Dozen ${dz}`);
+                for(let i=(dz-1)*12+1; i<=dz*12; i++) nums.add(i);
             }
         });
 
-        // Limit groups based on user request
-        let finalGroups = Array.from(tableGroups);
-        if (style === 'ds') finalGroups = finalGroups.slice(0, 3);
-        if (style === 'st') finalGroups = finalGroups.slice(0, 5);
-        if (style === 'cn') finalGroups = finalGroups.slice(0, 4);
-        if (style === 'dz') finalGroups = finalGroups.slice(0, 2);
+        currentGroups = Array.from(groups);
+        // Apply Caps
+        if (style === 'ds') currentGroups = currentGroups.slice(0, 3);
+        if (style === 'st') currentGroups = currentGroups.slice(0, 5);
+        if (style === 'cn') currentGroups = currentGroups.slice(0, 4);
+        if (style === 'dz') currentGroups = currentGroups.slice(0, 2);
 
-        currentBets = Array.from(numbersToBet);
+        // Re-generate number list based on finalized groups
+        currentNumbers = [];
+        if (style === 'ds') currentGroups.forEach(g => { if(g==="Zero Area") return; const s = parseInt(g.split(' ')[1]); for(let i=0; i<6; i++) currentNumbers.push(s+i); });
+        else if (style === 'st') currentGroups.forEach(g => { if(g==="Zero Area") return; const s = parseInt(g.split(' ')[1]); for(let i=0; i<3; i++) currentNumbers.push(s+i); });
+        else if (style === 'cn') currentGroups.forEach(g => { if(g==="Zero Area") return; const s = parseInt(g.split(' ')[1]); [s, s+1, s+3, s+4].forEach(c => {if(c<=36) currentNumbers.push(c)}); });
+        else if (style === 'dz') currentGroups.forEach(g => { if(g==="Zero Area") return; const dz = parseInt(g.split(' ')[1]); for(let i=(dz-1)*12+1; i<=dz*12; i++) currentNumbers.push(i); });
+        
+        if (groups.has("Zero Area")) [0,1,2,3].forEach(z => currentNumbers.push(z));
+        currentNumbers = [...new Set(currentNumbers)];
+
+        document.getElementById('stat-total-bet').innerText = (currentGroups.length * mult * parseFloat(document.getElementById('base-unit').value));
         
         const display = document.getElementById('bet-display');
-        display.innerHTML = `<strong>Covering:</strong><br>${finalGroups.map(g => `<span class="bet-tag bet-active">${g}</span>`).join('')}<br><br>`;
-        display.innerHTML += `<strong>Numbers:</strong><br>${currentBets.sort((a,b)=>a-b).map(n => `<span class="num-badge">${n}</span>`).join('')}`;
+        display.innerHTML = `<strong>Active Groups (${currentGroups.length}):</strong><br>` + 
+            currentGroups.map(g => `<span class="bet-unit-badge active-bet">${g}</span>`).join('') +
+            `<br><br><small>Numbers covered: ${currentNumbers.sort((a,b)=>a-b).join(', ')}</small>`;
     }
 
     function resetSession() {
-        spins = []; distanceMap = {}; currentBets = []; bankroll = 1000; mult = 1; streak = 0;
+        spins = []; distanceMap = {}; currentGroups = []; currentNumbers = []; bankroll = 0; mult = 1; streak = 0;
         updateUI();
     }
 </script>
