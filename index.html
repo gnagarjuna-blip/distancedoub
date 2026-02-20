@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIET - Group Betting DS Master Pro</title>
+    <title>BIET - Group Betting DS Master Pro (Sim Mode)</title>
     <style>
         :root { --bg: #f4f6f9; --dark: #2d3436; --accent: #0984e3; --win: #00b894; --loss: #d63031; --gold: #fdcb6e; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
@@ -13,6 +13,10 @@
         .config-group { display: flex; flex-direction: column; }
         .config-group label { font-size: 11px; font-weight: bold; margin-bottom: 5px; color: #636e72; }
         .config-group select, .config-group input { padding: 8px; border-radius: 4px; border: 1px solid #b2bec3; font-weight: bold; }
+
+        .sim-panel { background: #2d3436; color: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; }
+        .sim-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .sim-btn:hover { background: #0773c5; }
 
         #trigger-banner { width: 100%; padding: 12px; border-radius: 6px; text-align: center; margin-bottom: 15px; font-weight: bold; display: none; background: var(--win); color: white; border: 2px solid #fff; }
 
@@ -40,6 +44,15 @@
 
 <div class="container">
     <div id="trigger-banner">🔄 CONCISE DISTANCE REPEATED: PATTERN RESTART</div>
+
+    <div class="sim-panel">
+        <div style="flex-grow: 1;">
+            <label style="font-size: 11px; display: block; margin-bottom: 5px; color: #bdc3c7;">BULK SIMULATION</label>
+            <input type="number" id="sim-count" value="100" style="width: 80px; padding: 5px; border-radius: 4px; border: none;">
+            <span style="font-size: 12px; margin-left: 5px;">Spins</span>
+        </div>
+        <button class="sim-btn" onclick="runSimulation()">RUN BULK TEST</button>
+    </div>
 
     <div class="config-grid">
         <div class="config-group"><label>Initial Bankroll</label><input type="number" id="init-bankroll" value="1000" onchange="resetSession()"></div>
@@ -109,21 +122,35 @@
     const wr = document.getElementById('win-recovery');
     for(let i=1; i<=5; i++) wr.add(new Option(i + " Unit", i));
 
+    // Simulation Function
+    function runSimulation() {
+        const count = parseInt(document.getElementById('sim-count').value);
+        if(isNaN(count) || count <= 0) return;
+
+        for(let i=0; i<count; i++) {
+            if(currentBal <= 0) {
+                alert("Simulation stopped: Bankroll depleted!");
+                break;
+            }
+            const randomNum = Math.floor(Math.random() * 37);
+            press(randomNum);
+        }
+    }
+
     function press(n) {
         let unit = parseFloat(document.getElementById('base-unit').value);
         let lT = parseInt(document.getElementById('loss-trigger').value);
         let wR = parseInt(document.getElementById('win-recovery').value);
         let style = document.getElementById('bet-style').value;
 
-        // Process previous bet result
         if (currentGroups.length > 0) {
             let betPerGroup = unit * mult;
             let totalBetAmount = currentGroups.length * betPerGroup;
-            currentBal -= totalBetAmount; // Deduct bet
+            currentBal -= totalBetAmount;
             
             if (currentNumbers.includes(n)) {
                 let factor = (style === 'ds') ? 6 : (style === 'st' ? 12 : (style === 'cn' ? 9 : 3));
-                currentBal += (betPerGroup * factor); // Add winnings
+                currentBal += (betPerGroup * factor);
                 mult = Math.max(1, mult - wR);
                 winStreak++;
                 lossStreak = 0;
@@ -150,7 +177,8 @@
 
         const strip = document.getElementById('wheelStrip');
         strip.innerHTML = '';
-        wheel.forEach(n => {
+        const recentSpins = spins.slice(-20);
+        recentSpins.forEach(n => {
             const s = document.createElement('div');
             s.className = `slot ${n===0?'g':(reds.includes(n)?'r':'b')} ${n===spins[spins.length-1]?'last-hit':''}`;
             s.innerText = n; strip.appendChild(s);
